@@ -1,0 +1,141 @@
+{
+    "variable": {
+        "app": {
+            "description": "Short application name to use as component names prefix (e.g. myapp)"
+        },
+        "env": {
+            "default": "all",
+            "description": "Optional environment tag to assign to instances"
+        },
+        "region": {
+            "default": "us-east-1",
+            "description": "AWS region where the instance should be created"
+        },
+        "subnet_id": {
+            "description": "AWS VPC subnet ID where the instance should be created"
+        },
+        "cluster_name": {
+            "description": "AWS ECS cluster name where the instance should be registered"
+        },
+        "instance_index": {
+            "default": 1,
+            "description": "Instance index within the cluster"
+        },
+        "instance_type": {
+            "default": "t2.micro"
+        },
+        "key_name": {
+            "default": ""
+        },
+        "iam_instance_profile": {
+            "description": "Instance profile to associate with EC2 instance"
+        },
+        "route53_zone_id": {
+            "description": "Route 53 zone ID to create a DNS record in"
+        },
+        "hostname": {
+            "description": "An optional hostname to assign to the instance; must be within the route53_zone domain",
+            "default": ""
+        },
+        "ecs_optimized_amis": {
+            "default": {
+                "us-east-1": "ami-275ffe31",
+                "us-east-2": "ami-62745007",
+                "us-west-1": "ami-689bc208",
+                "us-west-2": "ami-62d35c02"
+            }
+        },
+        "vpc_security_group_ids": {
+            "description": "Coma-separated list of AWS SG ID's"
+        },
+        "associate_public_ip_address": {
+            "default": false
+        },
+        "disable_api_termination": {
+            "default": false
+        },
+        "volume_data_size": {
+            "description": "Size of the /ecs volume in Gigabytes",
+            "default": 5
+        },
+        "volume_data_terminate": {
+            "description": "Whether to delete the /ecs volume on instance termination",
+            "default": true
+        },
+        "volume_data_type": {
+            "description": "Type of the /ecs volume (\"standard\", \"gp2\", or \"io1\")",
+            "default": "standard"
+        }
+    },
+    "data": {
+        "template_file": {
+            "init_script": {
+                "template": "${file(\"${path.module}/etc/init_script.sh\")}",
+                "vars": {
+                    "cluster_name": "${var.cluster_name}"
+                }
+            }
+        }
+    },
+    "resource": {
+        "aws_instance": {
+            "default": {
+                "tags": {
+                    "Name": "${var.cluster_name}-${var.instance_index}",
+                    "Application": "${var.app}",
+                    "Environment": "${var.env}"
+                },
+                "subnet_id": "${var.subnet_id}",
+                "key_name": "${var.key_name}",
+                "instance_type": "${var.instance_type}",
+                "ami": "${lookup(var.ecs_optimized_amis, var.region)}",
+                "associate_public_ip_address": "${var.associate_public_ip_address}",
+                "disable_api_termination": "${var.disable_api_termination}",
+                "iam_instance_profile": "${var.iam_instance_profile}",
+                "vpc_security_group_ids": [
+                    "${split(\",\", var.vpc_security_group_ids)}"
+                ],
+                "user_data": "${data.template_file.init_script.rendered}",
+                "ebs_block_device": [
+                    {
+                        "device_name": "/dev/xvdcz",
+                        "volume_type": "standard",
+                        "volume_size": 22,
+                        "delete_on_termination": true
+                    },
+                    {
+                        "device_name": "/dev/xvdb",
+                        "volume_type": "${var.volume_data_type}",
+                        "volume_size": "${var.volume_data_size}",
+                        "delete_on_termination": "${var.volume_data_terminate}"
+                    }
+                ]
+            }
+        },
+        "aws_route53_record": {
+            "default": {
+                "zone_id": "${var.route53_zone_id}",
+                "name": "${coalesce(var.hostname, replace(\"${var.cluster_name}-${var.instance_index}.${var.app}.local\", \"${var.app}-\", \"\"))}",
+                "type": "A",
+                "ttl": "300",
+                "records": [
+                    "${aws_instance.default.private_ip}"
+                ]
+            }
+        }
+    },
+    "output": {
+        "id": {
+            "value": "${aws_instance.default.id}"
+        },
+        "public_ip": {
+            "value": "${aws_instance.default.public_ip}"
+        },
+        "private_ip": {
+            "value": "${aws_instance.default.private_ip}"
+        },
+        "hostname": {
+            "value": "${aws_route53_record.default.name}"
+        }
+    }
+}
