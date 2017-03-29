@@ -16,7 +16,7 @@ Usage
 
 Describe docker host configuration as a [module](https://www.terraform.io/docs/modules/index.html) in the terraform JSON config (__*.tf.json__):
 
-```json
+```js
 {
   "module": {
     "docker_host_1": {
@@ -55,21 +55,21 @@ Describe docker host configuration as a [module](https://www.terraform.io/docs/m
 
 The above configuration depends on the following services, which should be defined either in additional modules on in the main Terraform script:
 
-```json 
+```js 
 {
   "resource": {
     "aws_ecs_cluster": {
-      "web": { /* ... */}
+      "web": { /* ... */ }
     },
     "aws_subnet": {
       "public_1": { /* ... */ }
     },
     "aws_key_pair": {
-      "admin": { /* ... */}
+      "admin": { /* ... */ }
     },
     "aws_security_group": {
-      "web": { /* ... */},
-      "admin": { /* ... */}
+      "web": { /* ... */ },
+      "admin": { /* ... */ }
     },
     "aws_iam_instance_profile": {
       "docker_host": { /* ... */ }
