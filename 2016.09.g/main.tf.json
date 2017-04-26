@@ -64,7 +64,11 @@
         },
         "volume_data_type": {
             "description": "Type of the /ecs volume (\"standard\", \"gp2\", or \"io1\")",
-            "default": "standard"
+            "default": "gp2"
+        },
+        "volume_docker_type": {
+            "description": "Type of the volume for docker containers (\"standard\", \"gp2\", or \"io1\")",
+            "default": "gp2"
         }
     },
     "data": {
@@ -99,7 +103,7 @@
                 "ebs_block_device": [
                     {
                         "device_name": "/dev/xvdcz",
-                        "volume_type": "standard",
+                        "volume_type": "${var.volume_docker_type}",
                         "volume_size": 22,
                         "delete_on_termination": true
                     },
