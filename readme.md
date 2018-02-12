@@ -1,7 +1,7 @@
 ECS-Optimized AMI Terraform Module
 ==================================
 
-Repository contains a terraform module for ECS-Optimized instance deployment to your cluster. 
+Repository contains a terraform module for [ECS-Optimized instance](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html) deployment to your cluster. 
 
 In addition to standard deployment, it 
 
@@ -36,7 +36,7 @@ Describe docker host configuration as a [module](https://www.terraform.io/docs/m
 
       // data volume configuration (10Gb standard EBS volume mounted to /ecs/)
       "volume_data_size": 10,
-      "volume_data_type": "standard",
+      "volume_data_type": "gp2",
       "volume_data_terminate": false,
 
       // security configuration
